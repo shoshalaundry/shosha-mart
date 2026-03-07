@@ -41,6 +41,11 @@ export default function DashboardFilters({ role, branches = [] }: DashboardFilte
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Init from URL or keep empty (which implies current month)
     const urlStart = searchParams.get("startDate");
@@ -173,8 +178,10 @@ export default function DashboardFilters({ role, branches = [] }: DashboardFilte
 
     // Construct indicator text
     const now = new Date();
-    const defaultStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const defaultEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const defaultStart = new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000);
+    defaultStart.setHours(0, 0, 0, 0);
+    const defaultEnd = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
+    defaultEnd.setHours(23, 59, 59, 999);
 
     const activeStart = date?.from || defaultStart;
     const activeEnd = date?.to || defaultEnd;
@@ -185,8 +192,14 @@ export default function DashboardFilters({ role, branches = [] }: DashboardFilte
         branchName = found?.branchName || found?.username || "Cabang";
     }
 
-    const roleTarget = role === "SUPERADMIN" ? (branchId === "all" ? "Global" : `Cabang ${branchName}`) : "Cabang Anda";
+    const roleTarget = role === "SUPERADMIN" ? (branchId === "all" ? "Global" : `Cabang ${branchName}`)
+        : role === "ADMIN_TIER" ? (branchId === "all" ? "Semua Cabang Anda" : `Cabang ${branchName}`)
+            : "Cabang Anda";
     const indicatorText = `Menampilkan data untuk ${roleTarget}, ${format(activeStart, "d MMMM yyyy", { locale: idLocale })} - ${format(activeEnd, "d MMMM yyyy", { locale: idLocale })}`;
+
+    if (!isMounted) {
+        return <div className="space-y-4 mb-8 h-[90px] md:h-[74px] w-full rounded-xl border bg-white shadow-sm animate-pulse" />;
+    }
 
     return (
         <div className="space-y-4 mb-8">
@@ -208,7 +221,7 @@ export default function DashboardFilters({ role, branches = [] }: DashboardFilte
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                    {role === "SUPERADMIN" && (
+                    {(role === "SUPERADMIN" || role === "ADMIN_TIER") && (
                         <Select value={branchId} onValueChange={handleBranchChange}>
                             <SelectTrigger className="w-full sm:w-[220px]">
                                 <SelectValue placeholder="Semua Cabang" />
@@ -245,7 +258,7 @@ export default function DashboardFilters({ role, branches = [] }: DashboardFilte
                                         format(date.from, "dd MMM yyyy", { locale: idLocale })
                                     )
                                 ) : (
-                                    <span>Bulan Berjalan</span>
+                                    <span>30 Hari Terakhir</span>
                                 )}
                             </Button>
                         </PopoverTrigger>

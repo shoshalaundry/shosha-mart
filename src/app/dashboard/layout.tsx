@@ -34,9 +34,10 @@ export default async function DashboardLayout({
     } else {
         // BUYER
         const buyerMenu = [
-            { name: "Katalog L24J", href: "/dashboard/buyer", iconName: "Package" as const },
+            { name: "Dashboard", href: "/dashboard/buyer", iconName: "LayoutDashboard" as const },
+            { name: "Katalog L24J", href: "/dashboard/buyer/katalog", iconName: "Package" as const },
             { name: "Keranjang Belanja", href: "/dashboard/buyer/cart", iconName: "ShoppingCart" as const },
-            { name: "Pesanan Saya", href: "/dashboard/buyer/orders", iconName: "LayoutDashboard" as const },
+            { name: "Pesanan Saya", href: "/dashboard/buyer/orders", iconName: "Package" as const },
             { name: "Profil Saya", href: "/dashboard/buyer/profile", iconName: "Settings" as const },
         ];
         menuItems = buyerMenu;

@@ -34,10 +34,10 @@ export async function getAnalyticsData(
     const role = session.role;
     const userId = session.id;
 
-    // Default to current month if no dates provided
+    // Default to last 30 days if no dates provided
     const now = new Date();
-    const defaultStartDate = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    const defaultEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+    const defaultStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
+    const defaultEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000).setHours(23, 59, 59, 999);
 
     const start = params?.startDate || defaultStartDate;
     const end = params?.endDate || defaultEndDate;
@@ -52,7 +52,7 @@ export async function getAnalyticsData(
 
     if (role === "BUYER") {
         baseWhereClause = and(
-            eq(orders.status, "PROCESSED"),
+            inArray(orders.status, ["APPROVED", "PACKING", "PROCESSED", "SUCCESS"]),
             eq(orders.buyerId, userId),
             dateFilter
         );
@@ -68,14 +68,25 @@ export async function getAnalyticsData(
             return { totalRevenue: 0, ordersCount: 0, topProducts: [], salesTrend: [] };
         }
 
-        baseWhereClause = and(
-            inArray(orders.status, ["APPROVED", "PACKING", "PROCESSED"]),
-            inArray(orders.buyerId, managedBuyerIds),
+        const conditions = [
+            inArray(orders.status, ["APPROVED", "PACKING", "PROCESSED", "SUCCESS"]),
             dateFilter
-        );
+        ];
+
+        if (params?.branchId) {
+            if (managedBuyerIds.includes(params.branchId)) {
+                conditions.push(eq(orders.buyerId, params.branchId));
+            } else {
+                return { totalRevenue: 0, ordersCount: 0, topProducts: [], salesTrend: [] };
+            }
+        } else {
+            conditions.push(inArray(orders.buyerId, managedBuyerIds));
+        }
+
+        baseWhereClause = and(...conditions);
     } else if (role === "SUPERADMIN") {
         const conditions = [
-            inArray(orders.status, ["APPROVED", "PACKING", "PROCESSED"]),
+            inArray(orders.status, ["APPROVED", "PACKING", "PROCESSED", "SUCCESS"]),
             dateFilter
         ];
 
@@ -90,14 +101,14 @@ export async function getAnalyticsData(
 
     // 1. Total Revenue and Count (Aggregated via SQL)
     const summaryResult = await db.select({
-        totalRevenue: sql<number>`sum(${orders.totalAmount})`,
-        ordersCount: sql<number>`count(${orders.id})`
+        totalRevenue: sql<number>`CAST(COALESCE(SUM(${orders.totalAmount}), 0) AS INTEGER)`,
+        ordersCount: sql<number>`COUNT(${orders.id})`
     })
         .from(orders)
         .where(baseWhereClause);
 
-    const totalRevenue = summaryResult[0]?.totalRevenue || 0;
-    const ordersCount = summaryResult[0]?.ordersCount || 0;
+    const totalRevenue = Number(summaryResult[0]?.totalRevenue ?? 0);
+    const ordersCount = Number(summaryResult[0]?.ordersCount ?? 0);
 
     // 2. Top Products (Join items & products, aggregate)
     // We subquery the valid orders first.
@@ -123,14 +134,13 @@ export async function getAnalyticsData(
     // UNIX timestamps in SQLite need to be formatted to date strings.
     // Our createdAt is a milliseconds timestamp.
     const trendResult = await db.select({
-        // Extracting YYYY-MM-DD from milliseconds timestamp
-        date: sql<string>`date(${validOrdersQuery.createdAt} / 1000, 'unixepoch')`,
-        revenue: sql<number>`sum(${orders.totalAmount})` // Need outer join to sum amounts properly
+        date: sql<string>`date(${orders.createdAt} / 1000, 'unixepoch')`,
+        revenue: sql<number>`sum(${orders.totalAmount})`
     })
         .from(orders)
-        .innerJoin(validOrdersQuery, eq(orders.id, sql`${validOrdersQuery.id}`))
-        .groupBy(sql`date(${validOrdersQuery.createdAt} / 1000, 'unixepoch')`)
-        .orderBy(sql`date(${validOrdersQuery.createdAt} / 1000, 'unixepoch')`)
+        .where(baseWhereClause)
+        .groupBy(sql`date(${orders.createdAt} / 1000, 'unixepoch')`)
+        .orderBy(sql`date(${orders.createdAt} / 1000, 'unixepoch')`)
         .limit(30);
 
     let totalUsers: number | undefined = undefined;

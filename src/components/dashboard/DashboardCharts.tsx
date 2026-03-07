@@ -15,6 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AnalyticsSummary } from "@/app/actions/analytics";
 import { Users, ShoppingCart, TrendingUp, Package } from "lucide-react";
+import { formatRupiah, formatRupiahCompact, getMonthName } from "@/lib/utils";
 
 interface DashboardChartsProps {
     data: AnalyticsSummary | null;
@@ -35,7 +36,7 @@ export default function DashboardCharts({ data, role }: DashboardChartsProps) {
                         <TrendingUp className="h-4 w-4 text-neutral-400" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">Rp {data.totalRevenue.toLocaleString("id-ID")}</div>
+                        <div className="text-2xl font-bold">{formatRupiah(data.totalRevenue)}</div>
                     </CardContent>
                 </Card>
 
@@ -86,7 +87,7 @@ export default function DashboardCharts({ data, role }: DashboardChartsProps) {
                                     axisLine={false}
                                     tickFormatter={(value) => {
                                         const date = new Date(value);
-                                        return `${date.getDate()}/${date.getMonth() + 1}`;
+                                        return `${date.getDate()} ${getMonthName(date.getMonth() + 1)}`;
                                     }}
                                 />
                                 <YAxis
@@ -94,11 +95,15 @@ export default function DashboardCharts({ data, role }: DashboardChartsProps) {
                                     fontSize={12}
                                     tickLine={false}
                                     axisLine={false}
-                                    tickFormatter={(value) => `Rp ${(value / 1000000).toFixed(1)}M`}
+                                    tickFormatter={(value) => formatRupiahCompact(value)}
+                                    domain={['auto', 'auto']}
                                 />
                                 <Tooltip
-                                    formatter={(value: any) => [`Rp ${Number(value).toLocaleString("id-ID")}`, "Nilai"]}
-                                    labelFormatter={(label) => `Tanggal: ${label}`}
+                                    formatter={(value: any) => [formatRupiah(Number(value)), "Nilai"]}
+                                    labelFormatter={(label) => {
+                                        const date = new Date(label);
+                                        return `Tanggal: ${date.getDate()} ${getMonthName(date.getMonth() + 1)} ${date.getFullYear()}`;
+                                    }}
                                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
                                 />
                                 <Area
@@ -109,6 +114,7 @@ export default function DashboardCharts({ data, role }: DashboardChartsProps) {
                                     fillOpacity={1}
                                     fill="url(#colorRevenue)"
                                     activeDot={{ r: 6, strokeWidth: 0, fill: '#2563eb' }}
+                                    dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>

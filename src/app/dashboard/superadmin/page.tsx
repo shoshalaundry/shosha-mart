@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { orders, users, tiers } from "@/lib/db/schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and, gte, lte } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FulfillmentClient from "./FulfillmentClient";
@@ -35,8 +35,25 @@ export default async function SuperAdminDashboard(
         }
     });
 
+    const conditions = [];
+
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
+    const defaultEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000).setHours(23, 59, 59, 999);
+
+    const activeStart = startDate || defaultStart;
+    const activeEnd = endDate || defaultEnd;
+
+    conditions.push(gte(orders.createdAt, activeStart));
+    conditions.push(lte(orders.createdAt, activeEnd));
+
+    if (branchId && branchId !== "all") {
+        conditions.push(eq(orders.buyerId, branchId));
+    }
+
     // Fetch all orders with relational data for SuperAdmin Management
     const approvedOrdersData = await db.query.orders.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
         with: {
             tier: true,
             buyer: true,

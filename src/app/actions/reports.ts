@@ -108,7 +108,7 @@ export async function getReportData({
         const effectiveAdminId = adminId || (session?.role === "ADMIN_TIER" ? session.id : undefined);
 
         const conditions = [
-            or(eq(orders.status, "PROCESSED"), eq(orders.status, "PACKING"), eq(orders.status, "SUCCESS")),
+            inArray(orders.status, ["APPROVED", "PACKING", "PROCESSED", "SUCCESS"]),
             gte(orders.createdAt, startDate),
             lte(orders.createdAt, endDate),
         ];

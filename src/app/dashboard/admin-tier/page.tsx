@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { orders, users } from "@/lib/db/schema";
+import { eq, and, desc, gte, lte, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import ApprovalClient from "./ApprovalClient";
 import { Suspense } from "react";
@@ -22,12 +22,51 @@ export default async function AdminTierDashboard(
     // Parse filters
     const startDate = searchParams?.startDate ? parseInt(searchParams.startDate as string) : undefined;
     const endDate = searchParams?.endDate ? parseInt(searchParams.endDate as string) : undefined;
+    const branchId = searchParams?.branchId ? searchParams.branchId as string : undefined;
+
+    // Fetch branches for filter dropdown (buyers created by this Admin_Tier)
+    const branches = await db.query.users.findMany({
+        where: eq(users.createdBy, session.id),
+        columns: {
+            id: true,
+            username: true,
+            branchName: true,
+        }
+    });
+
+    const conditions = [
+        eq(orders.status, "PENDING_APPROVAL"),
+        eq(orders.tierId, session.tierId)
+    ];
+
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
+    const defaultEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000).setHours(23, 59, 59, 999);
+
+    const activeStart = startDate || defaultStart;
+    const activeEnd = endDate || defaultEnd;
+
+    conditions.push(gte(orders.createdAt, activeStart));
+    conditions.push(lte(orders.createdAt, activeEnd));
+
+    if (branchId) {
+        const isManaged = branches.some(b => b.id === branchId);
+        if (isManaged) {
+            conditions.push(eq(orders.buyerId, branchId));
+        } else {
+            conditions.push(eq(orders.buyerId, "invalid-branch")); // Prevent data leak
+        }
+    } else {
+        const managedBuyerIds = branches.map(b => b.id);
+        if (managedBuyerIds.length > 0) {
+            conditions.push(inArray(orders.buyerId, managedBuyerIds));
+        } else {
+            conditions.push(eq(orders.buyerId, "no-buyers-yet"));
+        }
+    }
 
     const pendingOrders = await db.query.orders.findMany({
-        where: and(
-            eq(orders.status, "PENDING_APPROVAL"),
-            eq(orders.tierId, session.tierId)
-        ),
+        where: and(...conditions),
         with: {
             buyer: true,
             items: {
@@ -60,13 +99,14 @@ export default async function AdminTierDashboard(
         <div className="container mx-auto py-8 px-4">
             <h1 className="text-3xl font-bold mb-8">Persetujuan Pesanan (Admin Tier)</h1>
 
-            <DashboardFilters role="ADMIN_TIER" />
+            <DashboardFilters role="ADMIN_TIER" branches={branches} />
 
-            <Suspense fallback={<DashboardSkeleton />} key={`${startDate}-${endDate}`}>
+            <Suspense fallback={<DashboardSkeleton />} key={`${startDate}-${endDate}-${branchId}`}>
                 <DashboardAnalytics
                     role="ADMIN_TIER"
                     startDate={startDate}
                     endDate={endDate}
+                    branchId={branchId}
                 />
             </Suspense>
 

@@ -39,22 +39,22 @@ export default function CatalogClient({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredProducts.map((p) => {
                     const inCart = cart[p.id]?.quantity || 0;
                     const isStockOut = p.stock === 0;
                     const reachStockLimit = inCart >= p.stock;
 
                     return (
-                        <div key={p.id} className="border rounded-xl p-4 flex flex-col justify-between bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group">
+                        <div key={p.id} className="border rounded-xl p-3 flex flex-col justify-between bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group">
                             {isStockOut && (
-                                <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm z-10">
+                                <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] md:text-xs font-bold px-2 py-1 rounded shadow-sm z-10">
                                     Stok Habis
                                 </div>
                             )}
 
                             <div className={isStockOut ? "opacity-60 grayscale" : "h-full flex flex-col"}>
-                                <div className="border border-neutral-100 rounded-lg aspect-square w-full flex items-center justify-center overflow-hidden bg-white mb-4 shrink-0 relative group-hover:border-blue-100 transition-colors">
+                                <div className="border border-neutral-100 rounded-lg h-32 md:h-48 w-full flex items-center justify-center overflow-hidden bg-white mb-3 shrink-0 relative group-hover:border-blue-100 transition-colors">
                                     {p.imageUrl ? (
                                         <Image
                                             src={p.imageUrl}
@@ -65,37 +65,37 @@ export default function CatalogClient({
                                             unoptimized
                                         />
                                     ) : (
-                                        <ImageIcon className="h-12 w-12 text-neutral-200" />
+                                        <ImageIcon className="h-8 w-8 md:h-12 md:w-12 text-neutral-200" />
                                     )}
                                 </div>
 
                                 <div className="flex-1 flex flex-col">
-                                    <h3 className="font-semibold text-neutral-900 leading-tight line-clamp-2 mb-1" title={p.name}>
+                                    <h3 className="font-medium text-sm md:text-base text-neutral-900 leading-tight line-clamp-2 mb-1" title={p.name}>
                                         {p.name}
                                     </h3>
-                                    <p className="text-xs text-neutral-500 mb-3 font-mono">SKU: {p.sku}</p>
+                                    <p className="text-[10px] md:text-xs text-neutral-500 mb-2 font-mono">SKU: {p.sku}</p>
 
                                     <div className="mt-auto">
                                         {p.tierPrice !== null && p.tierPrice !== undefined ? (
                                             <div className="flex items-baseline gap-1">
-                                                <p className="text-lg font-bold text-blue-600">Rp {p.tierPrice.toLocaleString()}</p>
+                                                <p className="text-base md:text-lg font-bold text-blue-600">Rp {p.tierPrice.toLocaleString()}</p>
                                                 <span className="text-[10px] text-neutral-400 font-medium">/ {p.unit || "Pcs"}</span>
                                             </div>
                                         ) : (
-                                            <p className="text-sm font-medium text-orange-500">Harga Belum Tersedia</p>
+                                            <p className="text-xs md:text-sm font-medium text-orange-500">Harga Belum Tersedia</p>
                                         )}
 
-                                        <div className="flex items-center gap-2 mt-2 mb-4">
-                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.stock === 0
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-2 mb-3">
+                                            <span className={`text-[10px] md:text-xs px-2 py-0.5 rounded-full font-medium ${p.stock === 0
                                                 ? 'bg-red-50 text-red-600'
                                                 : p.stock < 10
                                                     ? 'bg-orange-50 text-orange-600'
                                                     : 'bg-green-50 text-green-700'
                                                 }`}>
-                                                {p.stock === 0 ? "Stok Kosong" : `Sisa Stok: ${p.stock}`}
+                                                {p.stock === 0 ? "Stok Kosong" : `Sisa: ${p.stock}`}
                                             </span>
                                             {inCart > 0 && (
-                                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                                <span className="text-[10px] md:text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                                                     Di Keranjang: {inCart}
                                                 </span>
                                             )}
@@ -105,12 +105,12 @@ export default function CatalogClient({
                             </div>
 
                             <Button
-                                className="w-full mt-2"
+                                className="w-full mt-2 h-8 md:h-10 text-xs md:text-sm"
                                 disabled={p.tierPrice === null || isStockOut || reachStockLimit}
                                 onClick={() => addToCart(p)}
                                 variant={isStockOut ? "secondary" : "default"}
                             >
-                                {p.tierPrice === null ? "Hubungi Admin" : isStockOut ? "Stok Habis" : reachStockLimit ? "Maksimal Stok" : "Tambah ke Keranjang"}
+                                {p.tierPrice === null ? "Hubungi Admin" : isStockOut ? "Habis" : reachStockLimit ? "Maks" : "+ Keranjang"}
                             </Button>
                         </div>
                     );
@@ -118,7 +118,7 @@ export default function CatalogClient({
 
                 {filteredProducts.length === 0 && (
                     <div className="col-span-full py-12 text-center border-2 border-dashed border-neutral-200 rounded-xl">
-                        <p className="text-neutral-500 text-lg">Tidak ada produk yang cocok dengan pencarian Anda.</p>
+                        <p className="text-neutral-500 text-sm md:text-base">Tidak ada produk yang cocok dengan pencarian Anda.</p>
                     </div>
                 )}
             </div>

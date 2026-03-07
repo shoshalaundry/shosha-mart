@@ -7,7 +7,7 @@ import { DateRange } from "react-day-picker";
 import * as xlsx from "xlsx";
 import { Line, LineChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 
-import { cn } from "@/lib/utils";
+import { cn, formatRupiah, formatRupiahCompact, getMonthName } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -139,7 +139,7 @@ export function ReportClient({ initialData, role, adminId }: ReportDataProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            Rp {data.totalRevenue?.toLocaleString() || 0}
+                            {formatRupiah(data.totalRevenue || 0)}
                         </div>
                     </CardContent>
                 </Card>
@@ -183,16 +183,20 @@ export function ReportClient({ initialData, role, adminId }: ReportDataProps) {
                                         axisLine={false}
                                     />
                                     <YAxis
-                                        tickFormatter={(val) => `Rp${val / 1000}k`}
+                                        tickFormatter={(val) => formatRupiahCompact(val)}
                                         fontSize={12}
                                         tickLine={false}
                                         axisLine={false}
+                                        domain={['auto', 'auto']}
                                     />
                                     <RechartsTooltip
-                                        formatter={(value: any) => [`Rp ${Number(value).toLocaleString()}`, "Omzet"]}
-                                        labelFormatter={(label) => format(new Date(label), "dd MMM yyyy")}
+                                        formatter={(value: any) => [formatRupiah(Number(value)), "Omzet"]}
+                                        labelFormatter={(label) => {
+                                            const date = new Date(label);
+                                            return `${date.getDate()} ${getMonthName(date.getMonth() + 1)} ${date.getFullYear()}`;
+                                        }}
                                     />
-                                    <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={2} dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : (
@@ -247,7 +251,7 @@ export function ReportClient({ initialData, role, adminId }: ReportDataProps) {
                                         <TableCell>{t.productName}</TableCell>
                                         <TableCell>{t.unit}</TableCell>
                                         <TableCell className="text-right">{t.quantity}</TableCell>
-                                        <TableCell className="text-right">Rp {t.totalPrice.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right">{formatRupiah(t.totalPrice)}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
