@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import DashboardFilters from "@/components/dashboard/DashboardFilters";
+import { ImportOrderDialog } from "./orders/ImportOrderDialog";
 
 export default async function SuperAdminDashboard(
     props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
@@ -92,6 +93,9 @@ export default async function SuperAdminDashboard(
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Dashboard Utama</h1>
                     <p className="text-neutral-500">Ringkasan performa seluruh tier dan total penjualan yang disetujui.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <ImportOrderDialog />
                 </div>
             </div>
 
