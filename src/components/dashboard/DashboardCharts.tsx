@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import {
     Bar,
     BarChart,
-    Line,
-    LineChart,
+    Area,
+    AreaChart,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -48,6 +48,18 @@ export default function DashboardCharts({ data, role }: DashboardChartsProps) {
                         <div className="text-2xl font-bold">{data.ordersCount}</div>
                     </CardContent>
                 </Card>
+
+                {data.totalUsers !== undefined && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium text-neutral-500">Total Pengguna Aktif</CardTitle>
+                            <Users className="h-4 w-4 text-neutral-400" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{data.totalUsers}</div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -58,8 +70,14 @@ export default function DashboardCharts({ data, role }: DashboardChartsProps) {
                     </CardHeader>
                     <CardContent className="pl-2">
                         <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={data.salesTrend}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                            <AreaChart data={data.salesTrend}>
+                                <defs>
+                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                                 <XAxis
                                     dataKey="date"
                                     stroke="#888888"
@@ -81,16 +99,18 @@ export default function DashboardCharts({ data, role }: DashboardChartsProps) {
                                 <Tooltip
                                     formatter={(value: any) => [`Rp ${Number(value).toLocaleString("id-ID")}`, "Nilai"]}
                                     labelFormatter={(label) => `Tanggal: ${label}`}
+                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
                                 />
-                                <Line
+                                <Area
                                     type="monotone"
                                     dataKey="revenue"
                                     stroke="#2563eb"
-                                    strokeWidth={2}
-                                    dot={false}
-                                    activeDot={{ r: 6 }}
+                                    strokeWidth={3}
+                                    fillOpacity={1}
+                                    fill="url(#colorRevenue)"
+                                    activeDot={{ r: 6, strokeWidth: 0, fill: '#2563eb' }}
                                 />
-                            </LineChart>
+                            </AreaChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>

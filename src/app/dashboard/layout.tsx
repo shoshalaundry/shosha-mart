@@ -33,10 +33,13 @@ export default async function DashboardLayout({
         ];
     } else {
         // BUYER
-        menuItems = [
-            { name: "Katalog Produk", href: "/dashboard/buyer", iconName: "Package" },
-            { name: "Riwayat Pesanan", href: "/dashboard/buyer/orders", iconName: "ShoppingCart" },
+        const buyerMenu = [
+            { name: "Katalog L24J", href: "/dashboard/buyer", iconName: "Package" as const },
+            { name: "Keranjang Belanja", href: "/dashboard/buyer/cart", iconName: "ShoppingCart" as const },
+            { name: "Pesanan Saya", href: "/dashboard/buyer/orders", iconName: "LayoutDashboard" as const },
+            { name: "Profil Saya", href: "/dashboard/buyer/profile", iconName: "Settings" as const },
         ];
+        menuItems = buyerMenu;
     }
 
     async function handleLogout() {

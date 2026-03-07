@@ -9,7 +9,8 @@ import { getSession } from "@/lib/auth/session";
 export async function submitOrder(
     buyerId: string,
     tierId: string,
-    cartItems: { productId: string; quantity: number; priceAtPurchase: number }[]
+    cartItems: { productId: string; quantity: number; priceAtPurchase: number }[],
+    manualDate?: number
 ) {
     if (!cartItems || cartItems.length === 0) {
         return { error: "Keranjang kosong" };
@@ -45,6 +46,7 @@ export async function submitOrder(
                     tierId,
                     totalAmount,
                     status: "PENDING_APPROVAL",
+                    ...(manualDate ? { createdAt: manualDate } : {}) // Inject manual date if present
                 })
                 .returning();
 

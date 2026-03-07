@@ -5,10 +5,15 @@ import Image from "next/image";
 import { useCartStore } from "@/store/cartStore";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus, Trash2, ImageIcon, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Plus, Minus, Trash2, ImageIcon, ArrowLeft, ShoppingBag, Calendar as CalendarIcon } from "lucide-react";
 import { submitOrder } from "@/app/actions/orders";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 import { toast } from "sonner";
 
@@ -21,6 +26,7 @@ export default function CartPageClient({
 }) {
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [manualDate, setManualDate] = useState<Date | undefined>(new Date());
     const router = useRouter();
 
     const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice, getTotalItems } = useCartStore();
@@ -58,7 +64,12 @@ export default function CartPageClient({
         }));
 
         try {
-            const result = await submitOrder(buyerId, tierId, itemsToSubmit);
+            const result = await submitOrder(
+                buyerId,
+                tierId,
+                itemsToSubmit,
+                manualDate ? manualDate.getTime() : undefined
+            );
 
             if (result?.success) {
                 toast.success(result.message);
@@ -181,6 +192,32 @@ export default function CartPageClient({
                                     <span className="text-blue-600">Rp {totalPrice.toLocaleString()}</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="space-y-2 mb-6">
+                            <label className="text-sm font-medium text-neutral-700">Tanggal Transaksi (Dev Only)</label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900",
+                                            !manualDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-amber-600" />
+                                        {manualDate ? format(manualDate, "PPP", { locale: idLocale }) : <span>Pilih Tanggal</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={manualDate}
+                                        onSelect={setManualDate}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         </div>
 
                         <Button

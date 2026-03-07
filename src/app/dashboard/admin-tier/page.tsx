@@ -7,13 +7,21 @@ import ApprovalClient from "./ApprovalClient";
 import { Suspense } from "react";
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import DashboardFilters from "@/components/dashboard/DashboardFilters";
 
-export default async function AdminTierDashboard() {
+export default async function AdminTierDashboard(
+    props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
+) {
+    const searchParams = await props.searchParams;
     const session = await getSession();
 
     if (!session || session.role !== "ADMIN_TIER" || !session.tierId) {
         redirect("/login");
     }
+
+    // Parse filters
+    const startDate = searchParams?.startDate ? parseInt(searchParams.startDate as string) : undefined;
+    const endDate = searchParams?.endDate ? parseInt(searchParams.endDate as string) : undefined;
 
     const pendingOrders = await db.query.orders.findMany({
         where: and(
@@ -52,8 +60,14 @@ export default async function AdminTierDashboard() {
         <div className="container mx-auto py-8 px-4">
             <h1 className="text-3xl font-bold mb-8">Persetujuan Pesanan (Admin Tier)</h1>
 
-            <Suspense fallback={<DashboardSkeleton />}>
-                <DashboardAnalytics role="ADMIN_TIER" />
+            <DashboardFilters role="ADMIN_TIER" />
+
+            <Suspense fallback={<DashboardSkeleton />} key={`${startDate}-${endDate}`}>
+                <DashboardAnalytics
+                    role="ADMIN_TIER"
+                    startDate={startDate}
+                    endDate={endDate}
+                />
             </Suspense>
 
             <div className="mt-12">

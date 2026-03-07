@@ -1,21 +1,39 @@
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { orders, users, tiers } from "@/lib/db/schema";
-import { eq, inArray, sql, desc } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
 import FulfillmentClient from "./FulfillmentClient";
 import { Suspense } from "react";
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import DashboardFilters from "@/components/dashboard/DashboardFilters";
 
-export default async function SuperAdminDashboard() {
+export default async function SuperAdminDashboard(
+    props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
+) {
+    const searchParams = await props.searchParams;
     const session = await getSession();
 
     if (!session || session.role !== "SUPERADMIN") {
         redirect("/dashboard");
     }
+
+    // Parse filters
+    const startDate = searchParams?.startDate ? parseInt(searchParams.startDate as string) : undefined;
+    const endDate = searchParams?.endDate ? parseInt(searchParams.endDate as string) : undefined;
+    const branchId = searchParams?.branchId ? searchParams.branchId as string : undefined;
+
+    // Fetch branches for filter dropdown
+    const branches = await db.query.users.findMany({
+        where: eq(users.role, "BUYER"),
+        columns: {
+            id: true,
+            username: true,
+            branchName: true,
+        }
+    });
 
     // Fetch all orders with relational data for SuperAdmin Management
     const approvedOrdersData = await db.query.orders.findMany({
@@ -51,9 +69,6 @@ export default async function SuperAdminDashboard() {
         })),
     }));
 
-    const totalUsersResult = await db.select({ count: sql<number>`count(*)` }).from(users);
-    const totalUsers = totalUsersResult[0].count;
-
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -61,20 +76,17 @@ export default async function SuperAdminDashboard() {
                     <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Dashboard Utama</h1>
                     <p className="text-neutral-500">Ringkasan performa seluruh tier dan total penjualan yang disetujui.</p>
                 </div>
-
-                <Card className="w-full md:w-auto">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 p-4">
-                        <CardTitle className="text-sm font-medium text-neutral-500 mr-8">Total Pengguna Aktif</CardTitle>
-                        <Users className="h-4 w-4 text-neutral-400" />
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <div className="text-2xl font-bold">{totalUsers}</div>
-                    </CardContent>
-                </Card>
             </div>
 
-            <Suspense fallback={<DashboardSkeleton />}>
-                <DashboardAnalytics role="SUPERADMIN" />
+            <DashboardFilters role="SUPERADMIN" branches={branches} />
+
+            <Suspense fallback={<DashboardSkeleton />} key={`${startDate}-${endDate}-${branchId}`}>
+                <DashboardAnalytics
+                    role="SUPERADMIN"
+                    startDate={startDate}
+                    endDate={endDate}
+                    branchId={branchId}
+                />
             </Suspense>
 
             <Card className="mt-12">

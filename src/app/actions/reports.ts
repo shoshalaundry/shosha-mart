@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { orders, orderItems, products, users, tiers } from "@/lib/db/schema";
 import { eq, and, sql, desc, gte, lte, or, inArray } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session";
 
 export async function getTierMonthlyReport(tierId: string, month: number, year: number) {
     // ... rest truncated for replacement below
@@ -94,13 +95,32 @@ export async function getReportData({
     endDate,
     role,
     adminId,
+    branchId,
 }: {
     startDate: number;
     endDate: number;
     role: string;
     adminId?: string;
+    branchId?: string;
 }) {
     try {
+        const session = await getSession();
+        const effectiveAdminId = adminId || (session?.role === "ADMIN_TIER" ? session.id : undefined);
+
+        const conditions = [
+            or(eq(orders.status, "PROCESSED"), eq(orders.status, "PACKING"), eq(orders.status, "SUCCESS")),
+            gte(orders.createdAt, startDate),
+            lte(orders.createdAt, endDate),
+        ];
+
+        if (role === "ADMIN_TIER" && effectiveAdminId) {
+            conditions.push(eq(users.createdBy, effectiveAdminId));
+        }
+
+        if (branchId) {
+            conditions.push(eq(orders.buyerId, branchId));
+        }
+
         let ordersQuery = db
             .select({
                 orderId: orders.id,
@@ -111,34 +131,7 @@ export async function getReportData({
             })
             .from(orders)
             .innerJoin(users, eq(orders.buyerId, users.id))
-            .where(
-                and(
-                    or(eq(orders.status, "PROCESSED"), eq(orders.status, "PACKING"), eq(orders.status, "SUCCESS")),
-                    gte(orders.createdAt, startDate),
-                    lte(orders.createdAt, endDate)
-                )
-            );
-
-        if (role === "ADMIN_TIER" && adminId) {
-            ordersQuery = db
-                .select({
-                    orderId: orders.id,
-                    totalAmount: orders.totalAmount,
-                    createdAt: orders.createdAt,
-                    buyerName: users.branchName,
-                    buyerUsername: users.username,
-                })
-                .from(orders)
-                .innerJoin(users, eq(orders.buyerId, users.id))
-                .where(
-                    and(
-                        or(eq(orders.status, "PROCESSED"), eq(orders.status, "PACKING"), eq(orders.status, "SUCCESS")),
-                        gte(orders.createdAt, startDate),
-                        lte(orders.createdAt, endDate),
-                        eq(users.createdBy, adminId)
-                    )
-                );
-        }
+            .where(and(...conditions));
 
         const filteredOrders = await ordersQuery;
 
