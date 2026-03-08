@@ -5,6 +5,7 @@ import { approveOrder, rejectOrder } from "@/app/actions/orders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import OrderDetail, { OrderItemDetail } from "@/components/dashboard/OrderDetail";
 
 type OrderRow = {
@@ -54,17 +55,39 @@ export default function ApprovalClient({ initialOrders }: { initialOrders: Order
     };
 
     if (initialOrders.length === 0) {
-        return <p className="text-muted-foreground p-4">Tidak ada pesanan yang menunggu persetujuan.</p>;
+        return (
+            <div className="text-center py-12 bg-white rounded-lg border border-dashed border-neutral-300">
+                <p className="text-muted-foreground">Tidak ada pesanan yang sesuai dengan filter.</p>
+            </div>
+        );
     }
 
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case "PENDING_APPROVAL":
+                return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Menunggu</Badge>;
+            case "APPROVED":
+                return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Disetujui</Badge>;
+            case "PACKING":
+                return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Packing</Badge>;
+            case "REJECTED":
+                return <Badge variant="destructive">Ditolak</Badge>;
+            default:
+                return <Badge variant="outline">{status}</Badge>;
+        }
+    };
+
     return (
-        <div className="rounded-md border bg-transparent space-y-4">
+        <div className="space-y-4">
             {initialOrders.map((order) => (
-                <div key={order.id} className="rounded-lg border bg-card p-4 shadow-sm">
+                <div key={order.id} className="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                         <div className="space-y-1">
-                            <div className="text-xs font-mono text-muted-foreground uppercase">Ref: {order.id.slice(0, 8)}</div>
-                            <div className="font-bold text-neutral-900">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-mono text-muted-foreground uppercase">Ref: {order.id.slice(0, 8)}</span>
+                                {getStatusBadge(order.status)}
+                            </div>
+                            <div className="font-bold text-lg text-neutral-900 leading-tight">
                                 {order.buyerName} {order.branchName ? `(${order.branchName})` : ""}
                             </div>
                         </div>
@@ -73,33 +96,41 @@ export default function ApprovalClient({ initialOrders }: { initialOrders: Order
                             <div className="font-bold text-blue-600">Rp {order.totalAmount.toLocaleString()}</div>
                         </div>
                         <div className="md:col-span-2 flex flex-col sm:flex-row items-center gap-3 justify-end">
-                            <div className="flex w-full sm:w-auto items-center gap-2">
-                                <Input
-                                    type="text"
-                                    placeholder="Alasan tolak..."
-                                    value={rejectionReasons[order.id] || ""}
-                                    onChange={(e) => setRejectionReasons(prev => ({ ...prev, [order.id]: e.target.value }))}
-                                    className="h-9 min-w-[150px] text-sm"
-                                    disabled={isPending}
-                                />
-                                <Button
-                                    onClick={() => handleReject(order.id)}
-                                    disabled={isPending}
-                                    variant="destructive"
-                                    size="sm"
-                                    className="h-9 px-4"
-                                >
-                                    Tolak
-                                </Button>
-                            </div>
-                            <Button
-                                onClick={() => handleApprove(order.id)}
-                                disabled={isPending}
-                                size="sm"
-                                className="h-9 px-6 bg-green-600 hover:bg-green-700 text-white font-medium"
-                            >
-                                Setujui
-                            </Button>
+                            {order.status === "PENDING_APPROVAL" ? (
+                                <>
+                                    <div className="flex w-full sm:w-auto items-center gap-2">
+                                        <Input
+                                            type="text"
+                                            placeholder="Alasan tolak..."
+                                            value={rejectionReasons[order.id] || ""}
+                                            onChange={(e) => setRejectionReasons(prev => ({ ...prev, [order.id]: e.target.value }))}
+                                            className="h-9 min-w-[150px] text-sm"
+                                            disabled={isPending}
+                                        />
+                                        <Button
+                                            onClick={() => handleReject(order.id)}
+                                            disabled={isPending}
+                                            variant="destructive"
+                                            size="sm"
+                                            className="h-9 px-4"
+                                        >
+                                            Tolak
+                                        </Button>
+                                    </div>
+                                    <Button
+                                        onClick={() => handleApprove(order.id)}
+                                        disabled={isPending}
+                                        size="sm"
+                                        className="h-9 px-6 bg-green-600 hover:bg-green-700 text-white font-medium"
+                                    >
+                                        Setujui
+                                    </Button>
+                                </>
+                            ) : (
+                                <div className="text-xs text-muted-foreground italic">
+                                    Pesanan sudah diproses
+                                </div>
+                            )}
                         </div>
                     </div>
 

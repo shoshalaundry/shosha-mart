@@ -6,6 +6,7 @@ const encodedKey = new TextEncoder().encode(secretKey);
 
 export type SessionPayload = {
     id: string;
+    username: string;
     role: string;
     tierId: string | null;
 };

@@ -1,0 +1,128 @@
+/* Base styles for the printable invoice component */
+.invoice-container {
+    padding: 0.2in 0.5in;
+    /* Reduced vertical padding */
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 10pt;
+    line-height: 1.2;
+    color: #000;
+    background: white;
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    /* Reduced */
+    border-bottom: 1px solid #000;
+    padding-bottom: 5px;
+    /* Reduced */
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    /* Reduced */
+}
+
+.invoice-table th,
+.invoice-table td {
+    border: 1px solid #000;
+    padding: 5px;
+    text-align: left;
+}
+
+.invoice-table th {
+    background-color: #f0f0f0;
+}
+
+.invoice-total-section {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.invoice-total-box {
+    width: 40%;
+    border-top: 1px solid #000;
+    padding-top: 10px;
+}
+
+.invoice-signatures {
+    margin-top: 20px;
+    /* Reduced */
+    display: flex;
+    justify-content: space-between;
+}
+
+.signature-box {
+    width: 30%;
+    text-align: center;
+}
+
+.signature-line {
+    margin-top: 40px;
+    border-top: 1px solid #000;
+}
+
+/* Screen Visibility */
+@media screen {
+    .print-only {
+        display: none !important;
+    }
+}
+
+/* Print Specific Rules */
+@media print {
+
+    /* Hide everything that is NOT print-only */
+    body>*:not(.print-only) {
+        display: none !important;
+    }
+
+    .print-full {
+        size: 9.5in 11in;
+    }
+
+    .print-half {
+        size: 9.5in 5.5in;
+    }
+
+    .print-large {
+        size: 14.8in 11in;
+    }
+
+    .print-only {
+        display: block !important;
+        visibility: visible !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .invoice-print-area {
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    /* Paper size specific configurations */
+    .paper-size-full {
+        width: 9.5in;
+        height: 11in;
+    }
+
+    .paper-size-half {
+        width: 9.5in;
+        height: 5.5in;
+    }
+
+    .paper-size-large {
+        width: 14.8in;
+        height: 11in;
+    }
+
+    @page {
+        margin: 0;
+    }
+}

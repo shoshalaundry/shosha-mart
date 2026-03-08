@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { orders, users } from "@/lib/db/schema";
-import { eq, and, desc, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, desc, gte, lte, inArray, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import ApprovalClient from "./ApprovalClient";
 import { Suspense } from "react";
@@ -23,6 +23,8 @@ export default async function AdminTierDashboard(
     const startDate = searchParams?.startDate ? parseInt(searchParams.startDate as string) : undefined;
     const endDate = searchParams?.endDate ? parseInt(searchParams.endDate as string) : undefined;
     const branchId = searchParams?.branchId ? searchParams.branchId as string : undefined;
+    const searchQuery = searchParams?.q ? searchParams.q as string : undefined;
+    const statusFilter = searchParams?.status ? (searchParams.status as string).split(",") : ["APPROVED", "PACKING"];
 
     // Fetch branches for filter dropdown (buyers created by this Admin_Tier)
     const branches = await db.query.users.findMany({
@@ -34,8 +36,8 @@ export default async function AdminTierDashboard(
         }
     });
 
-    const conditions = [
-        eq(orders.status, "PENDING_APPROVAL"),
+    const conditions: any[] = [
+        inArray(orders.status, statusFilter),
         eq(orders.tierId, session.tierId)
     ];
 
@@ -63,6 +65,15 @@ export default async function AdminTierDashboard(
         } else {
             conditions.push(eq(orders.buyerId, "no-buyers-yet"));
         }
+    }
+
+    // Search Logic
+    if (searchQuery) {
+        conditions.push(sql`(
+            ${users.username} LIKE ${`%${searchQuery}%`} OR 
+            ${users.branchName} LIKE ${`%${searchQuery}%`} OR 
+            ${orders.id} LIKE ${`%${searchQuery}%`}
+        )`);
     }
 
     const pendingOrders = await db.query.orders.findMany({
@@ -97,7 +108,7 @@ export default async function AdminTierDashboard(
 
     return (
         <div className="container mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-8">Persetujuan Pesanan (Admin Tier)</h1>
+            <h1 className="text-3xl font-bold mb-8">Manajemen Pesanan (Admin Tier)</h1>
 
             <DashboardFilters role="ADMIN_TIER" branches={branches} />
 

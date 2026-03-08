@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq, and, ne } from "drizzle-orm";
-import { getSession } from "@/lib/auth/session";
+import { getSession, createSession } from "@/lib/auth/session";
 import bcrypt from "bcryptjs";
 
 export async function updateProfile(formData: FormData) {
@@ -81,6 +81,14 @@ export async function updateProfile(formData: FormData) {
         await db.update(users)
             .set(updates)
             .where(eq(users.id, userId));
+
+        // Refresh session with new username if it changed
+        await createSession({
+            id: userId,
+            username: username,
+            role: session.role,
+            tierId: session.tierId,
+        });
 
         return { success: true, message: "Profil berhasil diperbarui!" };
 

@@ -37,10 +37,11 @@ type MenuItem = {
 interface SidebarProps {
     menuItems: MenuItem[];
     role: string;
+    username: string;
     logoutAction: () => Promise<void>;
 }
 
-export default function Sidebar({ menuItems, role, logoutAction }: SidebarProps) {
+export default function Sidebar({ menuItems, role, username, logoutAction }: SidebarProps) {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false); // Desktop sidebar collapse/expand
     const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -89,11 +90,14 @@ export default function Sidebar({ menuItems, role, logoutAction }: SidebarProps)
 
             <div className="p-4 border-t border-neutral-200 shrink-0">
                 <div className={cn(
-                    "flex items-center mb-4 transition-opacity px-2",
+                    "flex flex-col mb-4 transition-opacity px-2",
                     isCollapsed ? "md:opacity-0 md:hidden" : "opacity-100"
                 )}>
-                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                        Role: <span className="text-neutral-900">{role}</span>
+                    <p className="text-sm font-bold text-neutral-900 truncate" title={username}>
+                        {username}
+                    </p>
+                    <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
+                        {role.replace('_', ' ')}
                     </p>
                 </div>
                 <form action={logoutAction}>

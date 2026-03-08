@@ -14,7 +14,7 @@ export default async function DashboardLayout({
         redirect("/login");
     }
 
-    const { role } = session;
+    const { role, username } = session;
 
     let menuItems: any[] = [];
 
@@ -54,6 +54,7 @@ export default async function DashboardLayout({
             <Sidebar
                 menuItems={menuItems}
                 role={role}
+                username={username}
                 logoutAction={handleLogout}
             />
 

@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { orders, users, tiers } from "@/lib/db/schema";
-import { eq, sql, desc, and, gte, lte } from "drizzle-orm";
+import { eq, sql, desc, and, gte, lte, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FulfillmentClient from "./FulfillmentClient";
@@ -10,6 +10,8 @@ import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import DashboardFilters from "@/components/dashboard/DashboardFilters";
 import { ImportOrderDialog } from "./orders/ImportOrderDialog";
+import StockAlert from "@/components/dashboard/StockAlert";
+import { products as productsTable } from "@/lib/db/schema";
 
 export default async function SuperAdminDashboard(
     props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
@@ -25,6 +27,8 @@ export default async function SuperAdminDashboard(
     const startDate = searchParams?.startDate ? parseInt(searchParams.startDate as string) : undefined;
     const endDate = searchParams?.endDate ? parseInt(searchParams.endDate as string) : undefined;
     const branchId = searchParams?.branchId ? searchParams.branchId as string : undefined;
+    const searchQuery = searchParams?.q ? searchParams.q as string : undefined;
+    const statusFilter = searchParams?.status ? (searchParams.status as string).split(",") : ["PENDING_APPROVAL", "APPROVED", "PACKING"];
 
     // Fetch branches for filter dropdown
     const branches = await db.query.users.findMany({
@@ -36,7 +40,9 @@ export default async function SuperAdminDashboard(
         }
     });
 
-    const conditions = [];
+    const conditions: any[] = [
+        inArray(orders.status, statusFilter)
+    ];
 
     const now = new Date();
     const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0);
@@ -52,9 +58,18 @@ export default async function SuperAdminDashboard(
         conditions.push(eq(orders.buyerId, branchId));
     }
 
+    // Search Logic
+    if (searchQuery) {
+        conditions.push(sql`(
+            ${users.username} LIKE ${`%${searchQuery}%`} OR 
+            ${users.branchName} LIKE ${`%${searchQuery}%`} OR 
+            ${orders.id} LIKE ${`%${searchQuery}%`}
+        )`);
+    }
+
     // Fetch all orders with relational data for SuperAdmin Management
     const approvedOrdersData = await db.query.orders.findMany({
-        where: conditions.length > 0 ? and(...conditions) : undefined,
+        where: and(...conditions),
         with: {
             tier: true,
             buyer: true,
@@ -66,6 +81,19 @@ export default async function SuperAdminDashboard(
         },
         orderBy: [desc(orders.createdAt)],
     });
+
+    // Fetch low stock products for alerts
+    const lowStockProducts = await db
+        .select({
+            id: productsTable.id,
+            name: productsTable.name,
+            sku: productsTable.sku,
+            stock: productsTable.stock,
+            unit: productsTable.unit,
+        })
+        .from(productsTable)
+        .where(lte(productsTable.stock, 10))
+        .orderBy(desc(productsTable.stock));
 
     const approvedOrders = approvedOrdersData.map(o => ({
         id: o.id,
@@ -100,6 +128,8 @@ export default async function SuperAdminDashboard(
             </div>
 
             <DashboardFilters role="SUPERADMIN" branches={branches} />
+
+            <StockAlert products={lowStockProducts} />
 
             <Suspense fallback={<DashboardSkeleton />} key={`${startDate}-${endDate}-${branchId}`}>
                 <DashboardAnalytics

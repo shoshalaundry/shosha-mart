@@ -43,6 +43,7 @@ export async function login(prevState: ActionState | null, formData: FormData): 
     // Create session
     await createSession({
         id: user.id,
+        username: user.username,
         role: user.role,
         tierId: user.tierId,
     });

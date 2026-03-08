@@ -67,13 +67,13 @@ export default function OrderDetail({ items }: { items: OrderItemDetail[] }) {
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
                                                     <span className="font-semibold text-sm text-neutral-900 truncate">{item.name}</span>
-                                                    <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-tighter">SKU: {item.sku}</span>
+                                                    <span className="text-xs font-mono text-neutral-500 uppercase tracking-tight">SKU: {item.sku}</span>
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-3 py-3 text-sm text-neutral-600 font-medium">{item.quantity}</TableCell>
                                         <TableCell className="px-3 py-3">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-100 text-neutral-600 uppercase">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-neutral-100 text-neutral-700 border border-neutral-200 uppercase">
                                                 {item.unit || "Pcs"}
                                             </span>
                                         </TableCell>
