@@ -20,29 +20,66 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Pagination } from "@/components/ui/Pagination";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export function UserManagementClient({ initialUsers, initialAdmins }: { initialUsers: any[], initialAdmins: any[] }) {
+export function UserManagementClient({
+    initialUsers,
+    initialAdmins,
+    totalCount,
+    currentPage
+}: {
+    initialUsers: any[],
+    initialAdmins: any[],
+    totalCount: number,
+    currentPage: number
+}) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [users, setUsers] = useState(initialUsers);
     const [admins, setAdmins] = useState(initialAdmins);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [roleFilter, setRoleFilter] = useState("ALL");
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+    const [roleFilter, setRoleFilter] = useState(searchParams.get("role") || "ALL");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<any>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
-    const fetchUsers = async () => {
-        const data = await getUsers(searchQuery, roleFilter);
-        setUsers(data);
+    const totalPages = Math.ceil(totalCount / 10);
+
+    const updateFilters = (q?: string, role?: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (q !== undefined) {
+            if (q) params.set("q", q);
+            else params.delete("q");
+        }
+        if (role !== undefined) {
+            if (role !== "ALL") params.set("role", role);
+            else params.delete("role");
+        }
+        params.set("page", "1"); // Reset to page 1 on filter change
+        router.push(`/dashboard/superadmin/users?${params.toString()}`);
     };
 
-    // Debounce search
+    // Sync with initialUsers when props change (server-side update)
+    useEffect(() => {
+        setUsers(initialUsers);
+    }, [initialUsers]);
+
+    // Use URL for searching instead of local fetch to keep it in sync with pagination
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchUsers();
+            if (searchQuery !== (searchParams.get("q") || "") || roleFilter !== (searchParams.get("role") || "ALL")) {
+                updateFilters(searchQuery, roleFilter);
+            }
         }, 500);
         return () => clearTimeout(timer);
     }, [searchQuery, roleFilter]);
+
+    const fetchUsers = async () => {
+        const res = await getUsers(searchQuery, roleFilter, currentPage);
+        setUsers(res.users);
+    };
 
     const handleCreateClick = () => {
         setEditingUser(null);
@@ -132,8 +169,8 @@ export function UserManagementClient({ initialUsers, initialAdmins }: { initialU
                                             <TableCell>{user.phone}</TableCell>
                                             <TableCell>
                                                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${user.role === 'SUPERADMIN' ? 'bg-red-100 text-red-800' :
-                                                        user.role === 'ADMIN_TIER' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-green-100 text-green-800'
+                                                    user.role === 'ADMIN_TIER' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-green-100 text-green-800'
                                                     }`}>
                                                     {user.role.replace('_', ' ')}
                                                 </span>
@@ -162,6 +199,8 @@ export function UserManagementClient({ initialUsers, initialAdmins }: { initialU
                             </TableBody>
                         </Table>
                     </div>
+
+                    <Pagination totalPages={totalPages} currentPage={currentPage} />
                 </CardContent>
             </Card>
 

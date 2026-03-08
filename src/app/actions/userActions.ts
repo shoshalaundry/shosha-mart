@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { eq, desc, ne, and, like, or } from "drizzle-orm";
+import { eq, desc, ne, and, like, or, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { getSession } from "@/lib/auth/session";
 import { revalidatePath } from "next/cache";
@@ -16,7 +16,7 @@ async function checkSuperAdmin() {
     return session;
 }
 
-export async function getUsers(query?: string, roleFilter?: string) {
+export async function getUsers(query?: string, roleFilter?: string, page: number = 1, limit: number = 10) {
     await checkSuperAdmin();
 
     try {
@@ -41,6 +41,9 @@ export async function getUsers(query?: string, roleFilter?: string) {
             );
         }
 
+        const offset = (page - 1) * limit;
+
+        // Fetch paginated users
         const allUsers = await db
             .select({
                 id: users.id,
@@ -52,21 +55,34 @@ export async function getUsers(query?: string, roleFilter?: string) {
             })
             .from(users)
             .where(and(...conditions))
-            .orderBy(desc(users.role)); // Admin first, Buyer later
+            .orderBy(desc(users.role))
+            .limit(limit)
+            .offset(offset);
+
+        // Count total users for pagination UI
+        const [countResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(users)
+            .where(and(...conditions));
+
+        const totalCount = countResult.count;
 
         // Map createdBy to human readable names
-        // Since sqlite doesn't support easy self joins in Drizzle easily without alias, 
-        // we'll just fetch admins and map them in memory for this scale.
         const admins = await db.select({ id: users.id, username: users.username }).from(users).where(eq(users.role, "ADMIN_TIER"));
         const adminMap = new Map(admins.map(a => [a.id, a.username]));
 
-        return allUsers.map(u => ({
+        const formattedUsers = allUsers.map(u => ({
             ...u,
             managedBy: u.createdBy ? adminMap.get(u.createdBy) || "Unknown Admin" : "-",
         }));
+
+        return {
+            users: formattedUsers,
+            totalCount
+        };
     } catch (error) {
         console.error("Failed to fetch users:", error);
-        return [];
+        return { users: [], totalCount: 0 };
     }
 }
 

@@ -6,13 +6,17 @@ import PricingList from "./PricingList";
 import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
-export default async function PricingPage() {
+export default async function PricingPage(
+    props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
+) {
+    const searchParams = await props.searchParams;
     const session = await getSession();
     if (!session || session.role !== "SUPERADMIN") {
         redirect("/login");
     }
 
-    const products = await getAllProducts();
+    const page = typeof searchParams?.page === 'string' ? parseInt(searchParams.page) : 1;
+    const { products, totalCount } = await getAllProducts(page);
     const tiers = await getAllTiers();
     const existingPrices = await db.select().from(tierPrices);
 
@@ -23,6 +27,8 @@ export default async function PricingPage() {
                 products={products}
                 tiers={tiers}
                 initialPrices={existingPrices}
+                totalCount={totalCount}
+                currentPage={page}
             />
         </div>
     );

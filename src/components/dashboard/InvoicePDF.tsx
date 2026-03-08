@@ -221,7 +221,7 @@ export const InvoicePDF = ({ order, paperSize = 'full' }: InvoiceProps) => {
                 {/* Header: 3 Columns */}
                 <View style={styles.header}>
                     <View style={styles.shopInfo}>
-                        <Text style={styles.shopName}>SHOSHA MART</Text>
+                        <Text style={styles.shopName}>ShoshaMart</Text>
                         <Text style={styles.shopAddress}>
                             Jl. Pahlawan No.33, RT.10/RW.4{"\n"}
                             Sukabumi Selatan, Kec. Kb. Jeruk,{"\n"}
@@ -293,7 +293,7 @@ export const InvoicePDF = ({ order, paperSize = 'full' }: InvoiceProps) => {
                     <View style={styles.signatureBox}>
                         <Text style={styles.signatureLabel}>Hormat Kami,</Text>
                         <View style={styles.signatureLine}>
-                            <Text>SHOSHA MART</Text>
+                            <Text>ShoshaMart</Text>
                         </View>
                     </View>
 

@@ -9,10 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Download, Package, CheckCircle, Trash2, Check, XCircle, AlertTriangle } from "lucide-react";
+import { Download, Package, CheckCircle, Trash2, Check, XCircle, AlertTriangle, MessageCircle } from "lucide-react";
 import OrderDetail, { OrderItemDetail } from "@/components/dashboard/OrderDetail";
 import dynamic from "next/dynamic";
 import { InvoicePDF } from "@/components/dashboard/InvoicePDF";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 // Dynamic import for PDFDownloadLink to avoid SSR issues
 const PDFDownloadLink = dynamic(
@@ -35,6 +37,7 @@ type OrderRow = {
     tierName: string;
     buyerName: string | null;
     branchName: string | null;
+    buyerPhone: string | null;
     createdAt: Date | string | number | null;
     adminNotes?: string | null;
     items: OrderItemDetail[];
@@ -140,10 +143,33 @@ export default function FulfillmentClient({ orders }: { orders: OrderRow[] }) {
                                 <Badge variant="secondary" className="w-fit font-bold">{order.tierName}</Badge>
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-[10px] text-neutral-400 uppercase tracking-wider">Pembeli</span>
-                                <span className="font-bold text-lg text-neutral-800 leading-tight">
-                                    {order.buyerName} {order.branchName ? `(${order.branchName})` : ""}
+                                <span className="text-[10px] text-neutral-400 uppercase tracking-wider">Tanggal</span>
+                                <span className="text-xs font-semibold text-neutral-600">
+                                    {order.createdAt ? format(new Date(order.createdAt), "dd MMM yyyy, HH:mm", { locale: id }) : "-"}
                                 </span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-neutral-400 uppercase tracking-wider">Pembeli</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-bold text-lg text-neutral-800 leading-tight">
+                                        {order.buyerName} {order.branchName ? `(${order.branchName})` : ""}
+                                    </span>
+                                    {order.buyerPhone && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 px-2 text-[10px] gap-1 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800"
+                                            onClick={() => {
+                                                const phone = order.buyerPhone?.replace(/\D/g, '');
+                                                const formattedPhone = phone?.startsWith('0') ? '62' + phone.slice(1) : phone;
+                                                window.open(`https://wa.me/${formattedPhone}?text=Halo ${order.buyerName}, ini dari Admin ShoshaMart terkait pesanan ${order.id.slice(0, 8)}`, '_blank');
+                                            }}
+                                        >
+                                            <MessageCircle className="w-3 h-3" />
+                                            Chat WA
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                             <div className="flex flex-col gap-1">
                                 <span className="text-[10px] text-neutral-400 uppercase tracking-wider">Status</span>

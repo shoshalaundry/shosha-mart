@@ -3,19 +3,23 @@ import { getProductsForBuyer } from "@/app/actions/products";
 import { redirect } from "next/navigation";
 import CatalogClient from "../CatalogClient";
 
-export default async function BuyerCatalogPage() {
+export default async function KatalogPage(
+    props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
+) {
+    const searchParams = await props.searchParams;
     const session = await getSession();
-
-    if (!session || session.role !== "BUYER" || !session.tierId) {
+    if (!session || session.role !== "BUYER") {
         redirect("/login");
     }
 
-    const products = await getProductsForBuyer(session.tierId);
+    const page = typeof searchParams?.page === 'string' ? parseInt(searchParams.page) : 1;
+    const { products, totalCount } = await getProductsForBuyer(session.id, page);
 
     return (
-        <div className="container mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-8 text-neutral-800 tracking-tight">Katalog Produk</h1>
-            <CatalogClient initialProducts={products} />
-        </div>
+        <CatalogClient
+            initialProducts={products}
+            totalCount={totalCount}
+            currentPage={page}
+        />
     );
 }

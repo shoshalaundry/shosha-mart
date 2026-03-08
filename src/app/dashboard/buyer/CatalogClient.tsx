@@ -5,12 +5,18 @@ import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 import { Product, useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/Pagination";
 
 export default function CatalogClient({
     initialProducts,
+    totalCount,
+    currentPage
 }: {
     initialProducts: Product[];
+    totalCount: number;
+    currentPage: number;
 }) {
+    const totalPages = Math.ceil(totalCount / 10);
     const [searchQuery, setSearchQuery] = useState("");
     const addToCart = useCartStore((state) => state.addToCart);
     const cart = useCartStore((state) => state.cart);
@@ -22,20 +28,23 @@ export default function CatalogClient({
 
     return (
         <div className="space-y-6">
-            <div className="max-w-md">
-                <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg className="w-4 h-4 text-neutral-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                        </svg>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h1 className="text-3xl font-bold text-neutral-800 tracking-tight">Katalog Produk</h1>
+                <div className="w-full max-w-md">
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg className="w-4 h-4 text-neutral-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                            </svg>
+                        </div>
+                        <input
+                            type="search"
+                            className="block w-full p-2 pl-10 text-sm border rounded-lg bg-neutral-50 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Cari produk berdasarkan nama atau SKU..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                    <input
-                        type="search"
-                        className="block w-full p-2 pl-10 text-sm border rounded-lg bg-neutral-50 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Cari produk berdasarkan nama atau SKU..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
                 </div>
             </div>
 
@@ -122,6 +131,8 @@ export default function CatalogClient({
                     </div>
                 )}
             </div>
+
+            <Pagination totalPages={totalPages} currentPage={currentPage} />
         </div>
     );
 }

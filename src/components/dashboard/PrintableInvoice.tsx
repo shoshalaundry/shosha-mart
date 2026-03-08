@@ -30,7 +30,7 @@ export default function PrintableInvoice({ order, paperSize }: PrintableInvoiceP
             <div className="invoice-container">
                 <div className="invoice-header">
                     <div>
-                        <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>SHOSHA MART</h1>
+                        <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>ShoshaMart</h1>
                         <p style={{ margin: 0, fontSize: '10px' }}>
                             Jl. Pahlawan No.33, RT.10/RW.4{"\n"}
                             Sukabumi Selatan, Kec. Kb. Jeruk,{"\n"}
@@ -96,7 +96,7 @@ export default function PrintableInvoice({ order, paperSize }: PrintableInvoiceP
                     <div className="signature-box">
                         <p>Hormat Kami,</p>
                         <div className="signature-line" style={{ marginTop: '20px' }}></div>
-                        <p>SHOSHA MART</p>
+                        <p>ShoshaMart</p>
                     </div>
                 </div>
             </div>

@@ -22,7 +22,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-center min-h-screen bg-neutral-50 flex-col py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-sm border border-neutral-200">
                 <div>
-                    <h2 className="mt-2 text-center text-3xl font-extrabold text-neutral-900 tracking-tight">Login Portal B2B</h2>
+                    <h2 className="mt-2 text-center text-3xl font-extrabold text-neutral-900 tracking-tight">Login ShoshaMart</h2>
                     <p className="mt-2 text-center text-sm text-neutral-600">
                         Masuk dengan username atau nomor telepon
                     </p>

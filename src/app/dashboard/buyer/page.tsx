@@ -3,6 +3,11 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Dashboard Pembeli",
+};
 
 export default async function BuyerDashboard() {
     const session = await getSession();

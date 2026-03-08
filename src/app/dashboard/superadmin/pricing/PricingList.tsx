@@ -15,15 +15,23 @@ type Product = { id: string; name: string; sku: string; basePrice: number };
 type Tier = { id: string; name: string };
 type TierPrice = { id: string; productId: string; tierId: string; price: number | null; isActive: boolean };
 
+import { Pagination } from "@/components/ui/Pagination";
+
 export default function PricingList({
     products,
     tiers,
-    initialPrices
+    initialPrices,
+    totalCount,
+    currentPage
 }: {
     products: Product[];
     tiers: Tier[];
     initialPrices: TierPrice[];
+    totalCount: number;
+    currentPage: number;
 }) {
+    const totalPages = Math.ceil(totalCount / 10);
+
     const [isPending, startTransition] = useTransition();
     const [editing, setEditing] = useState<{ product: Product; tier: Tier } | null>(null);
     const [price, setPrice] = useState<string>("");
@@ -121,6 +129,10 @@ export default function PricingList({
                     ))}
                 </TableBody>
             </Table>
+            <div className="p-4 border-t">
+                <Pagination totalPages={totalPages} currentPage={currentPage} />
+            </div>
+
 
             <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
                 <DialogContent>

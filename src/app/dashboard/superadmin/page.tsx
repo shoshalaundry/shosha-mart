@@ -12,6 +12,11 @@ import DashboardFilters from "@/components/dashboard/DashboardFilters";
 import { ImportOrderDialog } from "./orders/ImportOrderDialog";
 import StockAlert from "@/components/dashboard/StockAlert";
 import { products as productsTable } from "@/lib/db/schema";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "SuperAdmin Dashboard",
+};
 
 export default async function SuperAdminDashboard(
     props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
@@ -102,6 +107,7 @@ export default async function SuperAdminDashboard(
         tierName: o.tier.name,
         buyerName: o.buyer.username,
         branchName: o.buyer.branchName,
+        buyerPhone: o.buyer.phone,
         createdAt: o.createdAt,
         adminNotes: o.adminNotes, // Include adminNotes
         items: o.items.map(item => ({

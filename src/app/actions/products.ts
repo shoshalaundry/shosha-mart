@@ -2,12 +2,14 @@
 
 import { db } from "@/lib/db";
 import { products, tierPrices, tiers } from "@/lib/db/schema";
-import { eq, and, or, isNull } from "drizzle-orm";
+import { eq, and, or, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import * as xlsx from "xlsx";
 
-export async function getProductsForBuyer(tierId: string) {
+export async function getProductsForBuyer(tierId: string, page: number = 1, limit: number = 10) {
     try {
+        const offset = (page - 1) * limit;
+
         const result = await db
             .select({
                 id: products.id,
@@ -32,15 +34,37 @@ export async function getProductsForBuyer(tierId: string) {
                     isNull(tierPrices.isActive),
                     eq(tierPrices.isActive, true)
                 )
+            )
+            .limit(limit)
+            .offset(offset);
+
+        const [countResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(products)
+            .leftJoin(
+                tierPrices,
+                and(
+                    eq(tierPrices.productId, products.id),
+                    eq(tierPrices.tierId, tierId)
+                )
+            )
+            .where(
+                or(
+                    isNull(tierPrices.isActive),
+                    eq(tierPrices.isActive, true)
+                )
             );
 
-        return result.map(p => ({
-            ...p,
-            finalPrice: p.tierPrice ?? p.basePrice
-        }));
+        return {
+            products: result.map(p => ({
+                ...p,
+                finalPrice: p.tierPrice ?? p.basePrice
+            })),
+            totalCount: countResult.count
+        };
     } catch (error) {
         console.error("Failed to fetch products:", error);
-        return [];
+        return { products: [], totalCount: 0 };
     }
 }
 
@@ -93,12 +117,27 @@ export async function deleteProduct(id: string) {
     }
 }
 
-export async function getAllProducts() {
+export async function getAllProducts(page: number = 1, limit: number = 10) {
     try {
-        return await db.select().from(products);
+        const offset = (page - 1) * limit;
+
+        const allProducts = await db
+            .select()
+            .from(products)
+            .limit(limit)
+            .offset(offset);
+
+        const [countResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(products);
+
+        return {
+            products: allProducts,
+            totalCount: countResult.count
+        };
     } catch (error) {
         console.error("Failed to fetch products:", error);
-        return [];
+        return { products: [], totalCount: 0 };
     }
 }
 

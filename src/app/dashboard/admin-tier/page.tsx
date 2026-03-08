@@ -8,6 +8,11 @@ import { Suspense } from "react";
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import DashboardFilters from "@/components/dashboard/DashboardFilters";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Manajemen Pesanan",
+};
 
 export default async function AdminTierDashboard(
     props: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }
@@ -95,6 +100,8 @@ export default async function AdminTierDashboard(
         status: o.status,
         buyerName: o.buyer.username,
         branchName: o.buyer.branchName,
+        buyerPhone: o.buyer.phone,
+        createdAt: o.createdAt,
         items: o.items.map(item => ({
             id: item.id,
             name: item.product?.name || "Produk Terhapus",

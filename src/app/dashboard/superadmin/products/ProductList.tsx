@@ -38,7 +38,19 @@ const initialFormState: FormDataState = {
     name: "", sku: "", basePrice: 0, stock: 0, unit: "Pcs", imageUrl: "", imageType: "link", file: null, previewUrl: ""
 };
 
-export default function ProductList({ initialProducts }: { initialProducts: Product[] }) {
+import { Pagination } from "@/components/ui/Pagination";
+
+export default function ProductList({
+    initialProducts,
+    totalCount,
+    currentPage
+}: {
+    initialProducts: Product[],
+    totalCount: number,
+    currentPage: number
+}) {
+    const totalPages = Math.ceil(totalCount / 10);
+
     const [isPending, startTransition] = useTransition();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -292,6 +304,9 @@ export default function ProductList({ initialProducts }: { initialProducts: Prod
                     </TableBody>
                 </Table>
             </div>
+
+            <Pagination totalPages={totalPages} currentPage={currentPage} />
+
 
             <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
                 <DialogContent className="max-w-2xl">

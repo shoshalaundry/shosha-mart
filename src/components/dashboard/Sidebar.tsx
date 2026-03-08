@@ -129,7 +129,7 @@ export default function Sidebar({ menuItems, role, username, logoutAction }: Sid
         <>
             {/* Mobile Header with Hamburger */}
             <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-4 md:hidden fixed top-0 w-full z-40">
-                <span className="text-xl font-bold tracking-tight text-neutral-900">B2B Portal</span>
+                <span className="text-xl font-bold tracking-tight text-neutral-900">ShoshaMart</span>
                 <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -139,7 +139,7 @@ export default function Sidebar({ menuItems, role, username, logoutAction }: Sid
                     <SheetContent side="left" className="w-64 p-0 flex flex-col">
                         <SheetTitle className="sr-only">Navigasi Sidebar</SheetTitle>
                         <div className="h-16 flex items-center px-6 border-b border-neutral-200 shrink-0">
-                            <span className="text-xl font-bold tracking-tight text-neutral-900">B2B Portal</span>
+                            <span className="text-xl font-bold tracking-tight text-neutral-900">ShoshaMart</span>
                         </div>
                         <SidebarNavContent />
                     </SheetContent>
@@ -159,7 +159,7 @@ export default function Sidebar({ menuItems, role, username, logoutAction }: Sid
                         "text-xl font-bold tracking-tight text-neutral-900 transition-opacity",
                         isCollapsed ? "opacity-0 hidden" : "opacity-100"
                     )}>
-                        B2B Portal
+                        ShoshaMart
                     </span>
                     {/* Desktop Collapse Toggle */}
                     <Button

@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import OrderDetail, { OrderItemDetail } from "@/components/dashboard/OrderDetail";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { MessageCircle } from "lucide-react";
 
 type OrderRow = {
     id: string;
@@ -14,6 +17,8 @@ type OrderRow = {
     status: string;
     buyerName: string;
     branchName: string | null;
+    buyerPhone: string | null;
+    createdAt: Date | string | number | null;
     items: OrderItemDetail[];
 };
 
@@ -83,12 +88,32 @@ export default function ApprovalClient({ initialOrders }: { initialOrders: Order
                 <div key={order.id} className="rounded-lg border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                         <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-mono text-muted-foreground uppercase">Ref: {order.id.slice(0, 8)}</span>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <span className="text-xs font-mono text-muted-foreground uppercase shrink-0">Ref: {order.id.slice(0, 8)}</span>
+                                <span className="text-[10px] text-neutral-400 uppercase font-mono bg-neutral-50 px-1 rounded border border-neutral-100 shrink-0">
+                                    {order.createdAt ? format(new Date(order.createdAt), "dd/MM/yy HH:mm", { locale: id }) : "-"}
+                                </span>
                                 {getStatusBadge(order.status)}
                             </div>
-                            <div className="font-bold text-lg text-neutral-900 leading-tight">
-                                {order.buyerName} {order.branchName ? `(${order.branchName})` : ""}
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold text-lg text-neutral-900 leading-tight">
+                                    {order.buyerName} {order.branchName ? `(${order.branchName})` : ""}
+                                </span>
+                                {order.buyerPhone && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-6 px-2 text-[10px] gap-1 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800"
+                                        onClick={() => {
+                                            const phone = order.buyerPhone?.replace(/\D/g, '');
+                                            const formattedPhone = phone?.startsWith('0') ? '62' + phone.slice(1) : phone;
+                                            window.open(`https://wa.me/${formattedPhone}?text=Halo ${order.buyerName}, ini dari Admin ShoshaMart terkait pesanan ${order.id.slice(0, 8)}`, '_blank');
+                                        }}
+                                    >
+                                        <MessageCircle className="w-3 h-3" />
+                                        Chat WA
+                                    </Button>
+                                )}
                             </div>
                         </div>
                         <div className="space-y-1">
