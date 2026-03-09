@@ -8,12 +8,12 @@ export default async function KatalogPage(
 ) {
     const searchParams = await props.searchParams;
     const session = await getSession();
-    if (!session || session.role !== "BUYER") {
+    if (!session || session.role !== "BUYER" || !session.tierId) {
         redirect("/login");
     }
 
     const page = typeof searchParams?.page === 'string' ? parseInt(searchParams.page) : 1;
-    const { products, totalCount } = await getProductsForBuyer(session.id, page);
+    const { products, totalCount } = await getProductsForBuyer(session.tierId, page);
 
     return (
         <CatalogClient
