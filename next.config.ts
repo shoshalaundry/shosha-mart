@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Mode standalone SANGAT DIREKOMENDASIKAN untuk Hostinger / cPanel Node.js App
+  output: 'standalone',
+  
+  // Mengurangi potensi loop/konflik trailing slash dengan router eksternal (LiteSpeed/Nginx Hostinger)
+  trailingSlash: false,
+
   images: {
     remotePatterns: [
       {
@@ -13,11 +19,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.vercel-storage.com', // WAJIB: Untuk Vercel Blob kamu
+        hostname: '**.vercel-storage.com', // WAJIB: Untuk Vercel Blob
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com', // Opsional: Untuk testing saja
+        hostname: 'images.unsplash.com', // Opsional: Untuk testing
       },
     ],
   },
